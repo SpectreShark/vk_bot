@@ -23,7 +23,7 @@ redis_client = redis.Redis(
   ssl=True
 )
 
-conn = sqlite3.connect('data/rent.db')
+conn = sqlite3.connect('/data/rent.db')
 cursor = conn.cursor()
 
 support_specialists_ids = [541207257]
