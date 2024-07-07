@@ -19,8 +19,8 @@ host, port, password, token, group_id = os.environ.get('HOST'), os.environ.get('
 redis_client = redis.Redis(
   host=host,
   port=port,
-  password=password,
-  ssl=True
+  password=password
+#   ssl=True
 )
 
 conn = sqlite3.connect('/data/rent.db')
