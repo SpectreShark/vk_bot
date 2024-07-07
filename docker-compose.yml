@@ -1,0 +1,14 @@
+services:
+  app:
+    restart: always
+    build: .
+    volumes:
+      - ./data:/data/
+    env_file: ".env"
+    depends_on:
+      - redis
+  redis:
+    restart: always
+    image: redis:latest
+    volumes:
+      - ./data/redis:/data
