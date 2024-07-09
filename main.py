@@ -5,6 +5,7 @@ import vk_api
 import random
 import sqlite3
 import datetime
+from math import ceil
 from dotenv import load_dotenv
 # from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
@@ -19,11 +20,11 @@ host, port, password, token, group_id = os.environ.get('HOST'), os.environ.get('
 redis_client = redis.Redis(
   host=host,
   port=port,
-  password=password
-#   ssl=True
+  password=password,
+#   ssl=True # TODO COMM
 )
 
-conn = sqlite3.connect('/data/rent.db')
+conn = sqlite3.connect('/data/rent.db') # TODO ADD SLASH
 cursor = conn.cursor()
 
 support_specialists_ids = [541207257]
@@ -215,6 +216,73 @@ def send_rental_info(user_id):
         keyboard.add_button('Назад', color=VkKeyboardColor.NEGATIVE)
         send_message(user_id, 'У вас нет арендованных вещей', keyboard=keyboard)
 
+def all_rental_info():
+    keyboard = VkKeyboard(one_time=False) 
+    cursor.execute('SELECT full_name, item, day FROM all_save_items')
+    rentals = cursor.fetchall() 
+    if len(rentals) != 0:
+        message = []
+        for rental in rentals:
+            message.append(f"{rental[0]} - {rental[1]} на {rental[2]}")
+        message_text = '\n'.join(message)
+        keyboard.add_button('Назад', color=VkKeyboardColor.NEGATIVE)
+        send_message(user_id, message_text, keyboard=keyboard)
+    else:
+        keyboard.add_button('Назад', color=VkKeyboardColor.NEGATIVE)
+        send_message(user_id, 'Нет людей с забронированой арендой', keyboard=keyboard)
+
+def all_person_rental(state):
+    keyboard = VkKeyboard(one_time=False) 
+    cursor.execute('SELECT full_name FROM all_save_items')
+
+    persons = cursor.fetchall() 
+    if len(persons) != 0:
+        counter = 0
+        set_person = set()
+        count = int(state.split('_')[-1]) * 8
+        for el in persons:
+            set_person.add(el[0])
+
+        for ind, person in enumerate(set_person):
+            if ind < (count*8):
+                continue
+            counter += 1
+            keyboard.add_button(person, color=VkKeyboardColor.PRIMARY)
+            if counter % 2 == 0:
+                keyboard.add_line()
+            if counter == (count + 8):
+                break
+        if state != 'admin_page_0':
+            keyboard.add_button('Влево', color=VkKeyboardColor.POSITIVE)
+
+        keyboard.add_button('Назад', color=VkKeyboardColor.NEGATIVE)
+
+        if state != f'admin_page_{ceil(len(set_person) / 4) - 1}':
+            keyboard.add_button('Вправо', color=VkKeyboardColor.POSITIVE)
+
+        send_message(user_id, 'Список людей взявших аренду, выберите для какого человека, Вы хотите отменить аренду', keyboard=keyboard)
+    else:
+        keyboard.add_button('Назад', color=VkKeyboardColor.NEGATIVE)
+        send_message(user_id, 'Нет людей с забронированой арендой', keyboard=keyboard)
+
+def choice_delete_rental_from_user(full_name):
+    keyboard = VkKeyboard(one_time=False)
+    set_user_state(user_id, f'choice_delete_rental_from_{full_name.title()}')
+
+    cursor.execute('SELECT item FROM all_save_items WHERE full_name == ? AND day == ?', (full_name.title(), 'Воскресенье'))
+    items = cursor.fetchall()
+
+    if len(items) > 0:
+        for rental in items:
+
+            keyboard.add_button(rental[0], color=VkKeyboardColor.SECONDARY)
+        keyboard.add_line()
+        keyboard.add_button('Назад', color=VkKeyboardColor.NEGATIVE)
+        send_message(user_id, "Выберите, какую аренду Вы хотите отменить", keyboard=keyboard)
+    else:
+        keyboard.add_button('Назад', color=VkKeyboardColor.NEGATIVE)
+        send_message(user_id, 'У человека нет арендованных вещей', keyboard=keyboard)
+
 # Функция для выбора дня (для взятия аренды)
 def choice_date_from_arenda(user_id, text, state):
     keyboard = VkKeyboard(one_time=False)
@@ -265,12 +333,90 @@ def main_menu(user_id):
     keyboard.add_button('Помощь', color=VkKeyboardColor.PRIMARY)
     send_message(user_id, 'Главное меню', keyboard=keyboard)
 
+def main_menu_adm(user_id):
+    keyboard = VkKeyboard(one_time=False)
+
+    set_user_state(user_id, 'admin_menu')
+
+    keyboard.add_button('Информация', color=VkKeyboardColor.PRIMARY)
+    keyboard.add_line()
+    keyboard.add_button('Аренда', color=VkKeyboardColor.PRIMARY)
+    keyboard.add_line()
+    keyboard.add_button('Помощь', color=VkKeyboardColor.PRIMARY)
+    keyboard.add_line()
+    keyboard.add_button('Панель администратора', color=VkKeyboardColor.PRIMARY)
+    send_message(user_id, 'Главное меню', keyboard=keyboard)
+
+def delete_rental_from_user(text, full_name):
+    keyboard = VkKeyboard(one_time=False)
+
+    cursor.execute('SELECT * FROM all_save_items WHERE full_name = ?', (full_name,))
+    user_items = cursor.fetchall()
+        
+    if user_items:
+        cursor.execute('SELECT * FROM all_save_items WHERE full_name = ? AND item = ? AND day = "Воскресенье"', (full_name, text.title()))
+        item_to_cancel = cursor.fetchone()
+            
+        if item_to_cancel:
+            cursor.execute('''DELETE FROM all_save_items WHERE rowid IN (SELECT rowid FROM all_save_items 
+                WHERE full_name = ? AND item = ? AND day = "Воскресенье" LIMIT 1)''', (full_name, text.title()))
+            conn.commit()
+                
+            cursor.execute('UPDATE inventory SET quantity_voskresenie = quantity_voskresenie + 1 WHERE item = ?', (text.title(),))
+            conn.commit()
+                
+            keyboard.add_button('Назад', color=VkKeyboardColor.NEGATIVE)
+            send_message(user_id, f'Вы успешно отменили бронь "{text.title()}" на воскресенье для "{full_name}"!', keyboard=keyboard)
+        else:
+            keyboard.add_button('Назад', color=VkKeyboardColor.NEGATIVE)
+            send_message(user_id, f'Данный тип аренды "{full_name}" не бронировал!', keyboard=keyboard)
+    else:
+        keyboard.add_button('Назад', color=VkKeyboardColor.NEGATIVE)
+        send_message(user_id, f'{full_name} не бронировали вещи!', keyboard=keyboard)
+
+
 # Функция для обработки нажатий на кнопки
 def handle_buttons(user_id, text, state):
     keyboard = VkKeyboard(one_time=False)
 
     if (state == 'is_help') and (text != 'вопрос закрыт'):
         pass
+
+    elif (text == 'начать') and (user_id in support_specialists_ids):
+        main_menu_adm(user_id)
+
+    elif (text == 'назад') and (user_id in support_specialists_ids):
+        main_menu_adm(user_id)
+
+    elif (text == 'панель администратора') and (state == 'admin_menu'):
+        set_user_state(user_id, 'admin')
+
+        keyboard.add_button('Список всей аренды', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_line()
+        keyboard.add_button('Удалить аренду человеку', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_line()
+        keyboard.add_button('Назад', color=VkKeyboardColor.NEGATIVE)
+        send_message(user_id, 'Меню админ панели', keyboard=keyboard)
+
+    elif (text == 'список всей аренды') and (state == 'admin'):
+        all_rental_info()
+
+    elif (text == 'удалить аренду человеку') and (state == 'admin'):
+        set_user_state(user_id, 'admin_page_0')
+        all_person_rental('admin_page_0')
+
+    elif ((text == 'влево') or (text == 'вправо')) and (state.split('_')[:2] == 'admin_page'):
+        if text == 'вправо':
+            set_user_state(user_id, f'{(state[:-1]) + str(int(state[-1]) + 1)}')
+        else:
+            set_user_state(user_id, f'{(state[:-1]) + str(int(state[-1]) - 1)}')
+        all_person_rental(state)
+
+    elif ('_'.join(state.split('_')[:2]) == 'admin_page'):
+        choice_delete_rental_from_user(text)
+
+    elif ('_'.join(state.split('_')[:4])) == 'choice_delete_rental_from':
+        delete_rental_from_user(text, state.split('_')[-1])
 
     elif text == 'начать':
         main_menu(user_id)
