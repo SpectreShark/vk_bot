@@ -21,6 +21,7 @@ redis_client = redis.Redis(
   host=host,
   port=port,
   password=password,
+  username=os.environ.get('USERNAME'),
 #   ssl=True # TODO COMM
 )
 
