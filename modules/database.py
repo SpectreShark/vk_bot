@@ -9,10 +9,10 @@ LOGGER = getLogger("DatabaseModule")
 
 
 class DatabaseModule(Module):
-    dependencies = [ConfigModule]
+    required_dependencies = [ConfigModule]
 
     async def on_load(self, *args, **kwargs) -> None:
-        config = self.dependencies[0]
+        config: ConfigModule = self.dependencies[ConfigModule]
 
         host = config.data.POSTGRES_HOST
         port = config.data.POSTGRES_PORT

@@ -19,9 +19,6 @@ class ConfigData:
 
 
 class ConfigModule(Module):
-    dependencies = []
-    required_dependencies = []
-
     data = ConfigData()
 
     async def on_load(self) -> None:

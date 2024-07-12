@@ -1,24 +1,26 @@
-from vkbottle import Bot
+from vkbottle import Bot, API
 from logging import getLogger
 
-from vkbottle.bot import Message
-
+from handlers import MessageHandler
 from modules import Module
 from modules.config import ConfigModule
+from modules.database import DatabaseModule
+from modules.redis import RedisModule
 
 LOGGER = getLogger("BotModule")
 
 
 class VkBotModule(Module):
-    bot: Bot
-    dependencies = [ConfigModule]
+    bot: Bot = Bot()
+    required_dependencies = [ConfigModule, DatabaseModule, RedisModule]
 
     async def on_load(self) -> None:
         LOGGER.info("Starting up the bot...")
-        self.bot = Bot(self.dependencies[0].data.VK_BOT_TOKEN)
 
-        @self.bot.on.message(text="Help me")
-        async def on_help_mes(message: Message) -> None:
-            await message.reply("Никто тебе не поможет")
+        self.bot.api = API(self.dependencies[ConfigModule].data.VK_BOT_TOKEN)
+        message_handler = MessageHandler(self.dependencies)
+
+        self.bot.on.message(text="В главное меню")(message_handler.on_start_command)
+        self.bot.on.message()(message_handler.on_unknown_command)
 
         await self.bot.run_polling()

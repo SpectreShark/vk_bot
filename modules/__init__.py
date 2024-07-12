@@ -1,8 +1,11 @@
 from typing import Type, Any
 
+DEPENDENCIES_TYPE = dict[Type["Module"], Any]
+
 
 class Module:
-    dependencies: list[Type["Module"]] = []
+    dependencies: DEPENDENCIES_TYPE = {}
+    required_dependencies: list[Type["Module"]] = []
 
     async def on_load(self, *args, **kwargs) -> None:
         pass
@@ -29,10 +32,10 @@ class ModuleManager:
         if not self.modules.__contains__(module):
             raise Exception(f"Module {module} not registered")
 
-        for dependency in module.dependencies:
+        for dependency in module.required_dependencies:
             if not self.is_loaded(dependency):
                 await self.__load_module(dependency)
-            # module.dependencies.append(self.__loaded_modules[dependency])
+            module.dependencies[dependency] = self.__loaded_modules[dependency]
 
         instance = module()
         await instance.on_load(**self.modules[module])
