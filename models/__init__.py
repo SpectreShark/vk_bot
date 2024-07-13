@@ -1,2 +1,6 @@
-from .item import Item
-from .inventory import Inventory
+from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.orm import DeclarativeBase
+
+
+class BaseModel(AsyncAttrs, DeclarativeBase):
+    pass

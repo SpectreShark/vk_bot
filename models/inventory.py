@@ -1,12 +1,12 @@
-from tortoise import fields
-from tortoise.models import Model
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from models import BaseModel
+from models.item import Item
 
 
-class Inventory(Model):
-    id = fields.IntField(primary_key=True, unique=True, index=True)
-    item = fields.ForeignKeyField('models.Item', related_name='item')
-    quantity_on_sunday = fields.IntField(min=0, default=0)
-    created_at = fields.DatetimeField(auto_now_add=True)
+class Inventory(BaseModel):
+    __tablename__ = "inventories"
 
-    class Meta:
-        table = "inventories"
+    id: Mapped[int] = mapped_column(primary_key=True, unique=True, index=True)
+    item: Mapped[Item] = relationship(back_populates="inventory")
+    quantity_on_sunday: Mapped[int] = mapped_column(min=0, default=0)
