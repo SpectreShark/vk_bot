@@ -19,8 +19,11 @@ class VkBotModule(Module):
 
         self.bot.api = API(self.dependencies[ConfigModule].data.VK_BOT_TOKEN)
         message_handler = MessageHandler(self.dependencies)
-
+        # TODO: сделать декораторы на проверку state Redis
         self.bot.on.message(text="В главное меню")(message_handler.on_start_command)
+        self.bot.on.message(text="Информация")(message_handler.information)
+        self.bot.on.message(text="Аренда")(message_handler.lease)
+        self.bot.on.message(text="Помощь")(message_handler.help_menu)
         self.bot.on.message()(message_handler.on_unknown_command)
 
         await self.bot.run_polling()
