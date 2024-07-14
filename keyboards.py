@@ -1,12 +1,27 @@
 from vkbottle import Keyboard, Text, KeyboardButtonColor, OpenLink
 
+from config import question_answer
+
+question_frequent = (
+    Keyboard(one_time=True, inline=False)
+)
+for el in question_answer:
+    question_frequent.add(Text(el), color=KeyboardButtonColor.PRIMARY)
+    question_frequent.row()
+question_frequent.add(Text("Назад"), color=KeyboardButtonColor.NEGATIVE)
+
+tech_support_keyboard = (
+    Keyboard(one_time=False, inline=False)
+    .add(Text("Вопрос решен"), color=KeyboardButtonColor.POSITIVE)
+).get_json()
+
 choice_polygon_keyboard = (
-    Keyboard(one_time=True, inline=True)
+    Keyboard(one_time=True, inline=False)
     .add(OpenLink("https://vk.com/topic-218785093_49262342", "Домодедово"), color=KeyboardButtonColor.PRIMARY)
     .add(OpenLink("https://vk.com/topic-218785093_50861865", "Южный"), color=KeyboardButtonColor.PRIMARY)
     .row()
-    .add(Text("Назад"), color=KeyboardButtonColor.PRIMARY)
-)
+    .add(Text("Назад"), color=KeyboardButtonColor.NEGATIVE)
+).get_json()
 
 unknown_keyboard = (
     Keyboard(one_time=True, inline=False)
@@ -20,8 +35,6 @@ start_keyboard = (
     .add(Text("Аренда"), color=KeyboardButtonColor.PRIMARY)
     .row()
     .add(Text("Помощь"), color=KeyboardButtonColor.PRIMARY)
-    .row()
-    .add(Text("Назад"), color=KeyboardButtonColor.NEGATIVE)
 ).get_json()
 
 help_menu_keyboard = (

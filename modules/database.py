@@ -28,6 +28,7 @@ class DatabaseModule(Module):
         LOGGER.info("Successfully connected to the database!")
 
         async with engine.begin() as conn:
-            await conn.run_sync(BaseModel.metadata.create_all)
+            await conn.run_sync(BaseModel.metadata.drop_all)
+
 
         LOGGER.info("Database schemas was successfully generated.")
