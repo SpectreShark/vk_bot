@@ -23,11 +23,10 @@ class DatabaseModule(Module):
         database = config.data.POSTGRES_DATABASE
         password = config.data.POSTGRES_PASSWORD
 
-        print(username, password, host, port, database)
-
-        engine = create_async_engine("postgresql+asyncpg://postgres:dTsYhM@V*HcBFhpfPJwrtXpCE1TtspLAoQ5gNREcvWGnWeK%o9b9tvSbZ3LSWw4c@176.126.113.226:5678/postgres", echo=True, )
+        engine = create_async_engine(f"postgresql+asyncpg://{username}:{password}@{host}:{port}/{database}")
         self.session = async_sessionmaker(engine, expire_on_commit=False)
         LOGGER.info("Successfully connected to the database!")
+
         async with engine.begin() as conn:
             await conn.run_sync(BaseModel.metadata.create_all)
 

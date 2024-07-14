@@ -3,6 +3,7 @@ from vkbottle.bot import Message
 import keyboards
 from modules import DEPENDENCIES_TYPE
 from modules.redis import RedisModule
+from utils import requires_menu
 
 
 class MessageHandler:
@@ -21,14 +22,10 @@ class MessageHandler:
         await self.redis.set_menu(message.from_id, "unknown")
 
     async def on_start_command(self, message: Message) -> None:
-        # if (not (await self.__is_correct_menu(message.from_id, "unknown")))
-        if not await self.__is_correct_menu(message.from_id, "unknown"):
-            ...
-
         await message.answer("Главное меню", keyboard=keyboards.start_keyboard)
         await self.redis.set_menu(message.from_id, "start")
-        await self.redis.get_menu(message.from_id)
 
+    @requires_menu("start")
     async def information(self, message: Message) -> None:
         await message.answer("Меню информации", keyboard=keyboards.information_keyboard)
         await self.redis.set_menu(message.from_id, "info")

@@ -19,7 +19,4 @@ manager.add_module(VkBotModule)  # TODO: настроить graceful shutdown
 
 if __name__ == '__main__':
     run(manager.load_modules())
-
-    # FIXME: уточнить у Миши, в чём может быть проблема
-    run(manager.unload_modules())  # выкидывает RuntimeError: Event loop is closed
-
+    run(manager.unload_modules())

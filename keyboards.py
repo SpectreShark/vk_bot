@@ -15,8 +15,11 @@ unknown_keyboard = (
 
 start_keyboard = (
     Keyboard(one_time=True, inline=False)
-    .add(Text("Техническая поддержка"), color=KeyboardButtonColor.PRIMARY)
-    .add(Text("Частые вопросы"), color=KeyboardButtonColor.PRIMARY)
+    .add(Text("Информация"), color=KeyboardButtonColor.PRIMARY)
+    .row()
+    .add(Text("Аренда"), color=KeyboardButtonColor.PRIMARY)
+    .row()
+    .add(Text("Помощь"), color=KeyboardButtonColor.PRIMARY)
     .row()
     .add(Text("Назад"), color=KeyboardButtonColor.NEGATIVE)
 ).get_json()
