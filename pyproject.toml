@@ -2,7 +2,7 @@
 name = "vk-bot"
 version = "0.1.0"
 description = ""
-authors = ["SpecteShark <akulenok1200@gmail.com>"]
+authors = ["SpectreShark <akulenok1200@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 package-mode = false
