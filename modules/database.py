@@ -26,6 +26,7 @@ class DatabaseModule(Module):
         engine = create_async_engine(f"postgresql+asyncpg://{username}:{password}@{host}:{port}/{database}")
         self.session = async_sessionmaker(engine, expire_on_commit=False)
         LOGGER.info("Successfully connected to the database!")
+
         async with engine.begin() as conn:
             await conn.run_sync(BaseModel.metadata.create_all)
 
