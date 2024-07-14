@@ -18,5 +18,7 @@ manager.add_module(RedisModule)
 manager.add_module(VkBotModule)  # TODO: настроить graceful shutdown
 
 if __name__ == '__main__':
-    run(manager.load_modules())
-    run(manager.unload_modules())
+    try:
+        run(manager.load_modules())
+    finally:
+        run(manager.unload_modules())
