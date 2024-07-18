@@ -2,6 +2,11 @@ from vkbottle import Keyboard, Text, KeyboardButtonColor, OpenLink
 
 from config import question_answer
 
+back_keyboard = (
+    Keyboard(one_time=True, inline=False)
+    .add(Text("Назад"), color=KeyboardButtonColor.NEGATIVE)
+)
+
 question_frequent = (
     Keyboard(one_time=True, inline=False)
 )
@@ -26,6 +31,30 @@ choice_polygon_keyboard = (
 unknown_keyboard = (
     Keyboard(one_time=True, inline=False)
     .add(Text("В главное меню"), color=KeyboardButtonColor.PRIMARY)
+).get_json()
+
+admin_start_keyboard = (
+    Keyboard(one_time=True, inline=False)
+    .add(Text("Информация"), color=KeyboardButtonColor.PRIMARY)
+    .row()
+    .add(Text("Аренда"), color=KeyboardButtonColor.PRIMARY)
+    .row()
+    .add(Text("Помощь"), color=KeyboardButtonColor.PRIMARY)
+    .row()
+    .add(Text("Панель администратора"), color=KeyboardButtonColor.PRIMARY)
+).get_json()
+
+admin_menu_keyboard = (
+    Keyboard(one_time=True, inline=False)
+    .add(Text("Список всей аренды"), color=KeyboardButtonColor.PRIMARY)
+    .row()
+    .add(Text("Отменить аренду человеку"), color=KeyboardButtonColor.PRIMARY)
+    .row()
+    .add(Text("Добавить тех. специалиста"), color=KeyboardButtonColor.PRIMARY)
+    .row()
+    .add(Text("Удалить тех. специалиста"), color=KeyboardButtonColor.PRIMARY)
+    .row()
+    .add(Text("Назад"), color=KeyboardButtonColor.NEGATIVE)
 ).get_json()
 
 start_keyboard = (
