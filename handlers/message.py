@@ -5,6 +5,7 @@ from collections import defaultdict
 from vkbottle.bot import Message
 from vkbottle import Bot, Keyboard, KeyboardButtonColor, Text
 
+from config import question_answer
 from models import Item, Support
 
 from sqlalchemy import select, insert, update, func, delete
@@ -45,6 +46,11 @@ class MessageHandler:
             case "admin_delete_id_tech_sup":
                 await self.admin_delete_tech_support(message)
                 return
+            case "question_frequent":
+                if message.text in question_answer:
+                    await message.answer(question_answer.get(message.text), keyboard=keyboards.back_keyboard)
+                    await self.redis.set_menu(message.from_id, "answer_question_frequent")
+                    return
         is_message_lease = await self.get_all_lease_menu()
         if message.text in is_message_lease:
             match state:
@@ -378,6 +384,8 @@ class MessageHandler:
                 await self.admin_add_id_tech_sup.__wrapped__(self, message)
             case "admin_delete_tech_support":
                 await self.admin_delete_id_tech_sup.__wrapped__(self, message)
+            case "answer_question_frequent":
+                await self.frequently_asked_questions.__wrapped__(self, message)
             case "delete_lease":
                 if (await self.get_my_cancel_lease(message.from_id)) == []:
                     await self.lease.__wrapped__(self, message)
