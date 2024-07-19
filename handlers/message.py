@@ -1,16 +1,18 @@
-from collections import defaultdict
-from typing import List
-
-from sqlalchemy.dialects.postgresql import array
-from sqlalchemy import select, insert, update, func, delete
-from vkbottle import Bot, Keyboard, KeyboardButtonColor, Text
-from vkbottle.bot import Message
-
 import keyboards
+
+from collections import defaultdict
+
+from vkbottle.bot import Message
+from vkbottle import Bot, Keyboard, KeyboardButtonColor, Text
+
 from models import Item, Support
+
+from sqlalchemy import select, insert, update, func, delete
+
 from modules import DEPENDENCIES_TYPE
 from modules.redis import RedisModule
 from modules.database import DatabaseModule
+
 from utils import requires_menu
 from utils.decorators import requires_admin_menu
 from utils.support import sent_request_to_support, get_specialist_ids
@@ -36,6 +38,12 @@ class MessageHandler:
                 return
             case "admin_cancel_rental":
                 await self.admin_choice_cancel_rental(message)
+                return
+            case "admin_add_id_tech_sup":
+                await self.admin_add_tech_support(message)
+                return
+            case "admin_delete_id_tech_sup":
+                await self.admin_delete_tech_support(message)
                 return
         is_message_lease = await self.get_all_lease_menu()
         if message.text in is_message_lease:
@@ -96,42 +104,60 @@ class MessageHandler:
             await self.redis.set_menu(message.from_id, "admin_cancel_rental")
 
     @requires_menu("admin_menu")
+    async def admin_get_all_support(self, message: Message) -> None:
+        query: str = await self.get_all_support()
+        await message.answer(f"Список всей тех. поддержки:\n {query}", keyboard=keyboards.back_keyboard)
+        await self.redis.set_menu(message.from_id, "admin_get_all_support")
+
+    @requires_menu("admin_menu")
+    async def admin_add_id_tech_sup(self, message: Message) -> None:
+        await message.answer("Введите уникальный id человека, которого хотите добавить. \
+        Для получение id человека, ему нужно написать 'Получить id'.", keyboard=keyboards.back_keyboard)
+        await self.redis.set_menu(message.from_id, "admin_add_id_tech_sup")
+
+    @requires_menu("admin_menu")
+    async def admin_delete_id_tech_sup(self, message: Message) -> None:
+        await message.answer("Введите уникальный id человека, которого хотите удалить. \
+        Для получение id человека, ему нужно написать 'Получить id'.", keyboard=keyboards.back_keyboard)
+        await self.redis.set_menu(message.from_id, "admin_delete_id_tech_sup")
+
+    @requires_menu("admin_add_id_tech_sup")
     async def admin_add_tech_support(self, message: Message) -> None:
         async with self.database.session() as session:
             result = (await session.execute(select(Support))).fetchall()
             list_menu = [el.user_id for user in result for el in user]
-            if not (message.text).isdigit():
-                message.answer("Введите уникальный индификатор человека, которого хотите добавить. Для получение"
-                               " индификатора человека, ему нужно написать 'Получить id'.", keyboard=keyboards.back_keyboard)
+            if (not (message.text).isdigit()) and (message.text != "Назад"):
+                await message.answer("Введите уникальный id человека, которого хотите добавить. Для получение \
+                                     id человека, ему нужно написать 'Получить id'.",
+                                     keyboard=keyboards.back_keyboard)
                 await self.redis.set_menu(message.from_id, "admin_add_tech_support")
-            if message.text in list_menu:
-                message.answer("Человек уже является тех. специалистом", keyboard=keyboards.back_keyboard)
+            elif int(message.text) in list_menu:
+                await message.answer("Человек уже является тех. специалистом", keyboard=keyboards.back_keyboard)
                 await self.redis.set_menu(message.from_id, "admin_add_tech_support")
             else:
-                (await session.execute(insert(Support).values(message.text)))
+                (await session.execute(insert(Support).values(user_id=int(message.text))))
                 (await session.commit())
-                message.answer("Человек добавлен в тех. специалисты", keyboard=keyboards.back_keyboard)
+                await message.answer("Человек добавлен в тех. специалисты", keyboard=keyboards.back_keyboard)
                 await self.redis.set_menu(message.from_id, "admin_add_tech_support")
 
-    @requires_menu("admin_menu")
+    @requires_menu("admin_delete_id_tech_sup")
     async def admin_delete_tech_support(self, message: Message) -> None:
         async with self.database.session() as session:
             result = (await session.execute(select(Support))).fetchall()
             list_menu = [el.user_id for user in result for el in user]
-            if not (message.text).isdigit():
-                message.answer("Введите уникальный индификатор человека, которого хотите удалить. Для получение"
-                               " индификатора человека, ему нужно написать 'Получить id'.",
-                               keyboard=keyboards.back_keyboard)
+            if (not (message.text).isdigit()) and (message.text != "Назад"):
+                await message.answer("Введите уникальный индификатор человека, которого хотите удалить. Для получение"
+                                     " индификатора человека, ему нужно написать 'Получить id'.",
+                                     keyboard=keyboards.back_keyboard)
                 await self.redis.set_menu(message.from_id, "admin_delete_tech_support")
-            if message.text in list_menu:
-                message.answer("Человек не является тех. специалистом", keyboard=keyboards.back_keyboard)
+            elif int(message.text) not in list_menu:
+                await message.answer("Человек не является тех. специалистом", keyboard=keyboards.back_keyboard)
                 await self.redis.set_menu(message.from_id, "admin_delete_tech_support")
             else:
-                (await session.execute(delete(Support).filter(Support.user_id == message.text)))
+                (await session.execute(delete(Support).filter(Support.user_id == int(message.text))))
                 (await session.commit())
-                message.answer("Человек удален из тех. специалистов", keyboard=keyboards.back_keyboard)
+                await message.answer("Человек удален из тех. специалистов", keyboard=keyboards.back_keyboard)
                 await self.redis.set_menu(message.from_id, "admin_delete_tech_support")
-
 
     @requires_menu("admin_cancel_rental")
     async def admin_choice_cancel_rental(self, message: Message) -> None:
@@ -242,7 +268,6 @@ class MessageHandler:
             await message.answer("Данный тип аренды закончился.", keyboard=keyboards.back_keyboard)
             await self.redis.set_menu(message.from_id, "add_lease")
 
-
     @requires_menu("lease_menu")
     async def price_lease(self, message: Message) -> None:
         await message.answer(f"Список цен:\n{await self.get_price_lease()}", keyboard=keyboards.back_keyboard)
@@ -305,7 +330,8 @@ class MessageHandler:
                     )
 
                     await session.commit()
-                    await message.answer(f"Вы успешно отменили бронирование {message.text}", keyboard=keyboards.back_keyboard)
+                    await message.answer(f"Вы успешно отменили бронирование {message.text}",
+                                         keyboard=keyboards.back_keyboard)
                     await self.redis.set_menu(message.from_id, "delete_lease")
         else:
             await message.answer("Вы не бронировали данный тип аренды!", keyboard=keyboards.back_keyboard)
@@ -337,7 +363,8 @@ class MessageHandler:
         match menu:
             case "info" | "lease_menu" | "help_menu" | "tech_support" | "admin_menu" | "get_id":
                 await self.on_start_command(message)
-            case "admin_all_rentals" | "admin_cancel_rental_null" | "admin_cancel_rental":
+            case "admin_all_rentals" | "admin_cancel_rental_null" | "admin_cancel_rental" | "admin_add_id_tech_sup" | \
+                 "admin_delete_id_tech_sup" | "admin_get_all_support":
                 await self.admin_menu.__wrapped__(self, message)
             case "admin_choice_cancel_rental_null" | "admin_delete_rental":
                 await self.admin_cancel_rental.__wrapped__(self, message)
@@ -347,6 +374,10 @@ class MessageHandler:
                 await self.help_menu.__wrapped__(self, message)
             case "cancel_my_lease" | "my_lease" | "remaining_lease" | "price_lease" | "select_lease" | "add_lease":
                 await self.lease.__wrapped__(self, message)
+            case "admin_add_tech_support":
+                await self.admin_add_id_tech_sup.__wrapped__(self, message)
+            case "admin_delete_tech_support":
+                await self.admin_delete_id_tech_sup.__wrapped__(self, message)
             case "delete_lease":
                 if (await self.get_my_cancel_lease(message.from_id)) == []:
                     await self.lease.__wrapped__(self, message)
@@ -360,7 +391,8 @@ class MessageHandler:
 
     async def get_lease(self) -> list:
         async with self.database.session() as session:
-            result = (await session.execute(select(Item).filter(Item.quantity_on_sunday > 0).order_by(Item.name))).fetchall()
+            result = (
+                await session.execute(select(Item).filter(Item.quantity_on_sunday > 0).order_by(Item.name))).fetchall()
             name = [el.name for item in result for el in item]
             return name
 
@@ -398,7 +430,8 @@ class MessageHandler:
 
     async def get_all_rental_lease(self) -> str:
         async with self.database.session() as session:
-            result = (await session.execute(select(Item).filter(func.cardinality(Item.renters_users_id) > 0))).fetchall()
+            result = (
+                await session.execute(select(Item).filter(func.cardinality(Item.renters_users_id) > 0))).fetchall()
             item_counts = defaultdict(lambda: defaultdict(int))
             for row in result:
                 item = row[0]
@@ -417,13 +450,16 @@ class MessageHandler:
         async with self.database.session() as session:
             list_name = []
             try:
-                result = (await session.execute(select(Item).filter(func.cardinality(Item.renters_users_id) > 0))).fetchall()[0]
+                result = \
+                    (await session.execute(
+                        select(Item).filter(func.cardinality(Item.renters_users_id) > 0))).fetchall()[0]
             except IndexError:
                 result = []
             for el in result:
                 if any([el[1] == i for i in list_name]):
                     continue
-                user_info = await self.bot.api.users.get(user_ids=el.renters_users_id, fields=['first_name', 'last_name'])
+                user_info = await self.bot.api.users.get(user_ids=el.renters_users_id,
+                                                         fields=['first_name', 'last_name'])
                 full_name = f"{user_info[0].first_name} {user_info[0].last_name}"
                 list_name.append([el.renters_users_id, full_name])
             return list_name
@@ -432,3 +468,12 @@ class MessageHandler:
         async with self.database.session() as session:
             result = (await session.execute(select(Item).filter(Item.renters_users_id.contains([user_id])))).fetchall()
             return [el.name for item in result for el in item]
+
+    async def get_all_support(self) -> str:
+        async with self.database.session() as session:
+            query = (await session.execute(select(Support))).fetchall()
+            list_name = []
+            for el in [el.user_id for i in query for el in i]:
+                user_info = await self.bot.api.users.get(user_ids=el, fields=['first_name', 'last_name'])
+                list_name.append(f"{user_info[0].first_name} {user_info[0].last_name}")
+            return "".join([f"\n{el}\n" for el in list_name])

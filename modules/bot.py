@@ -24,8 +24,9 @@ class VkBotModule(Module):
         self.bot.on.message(text="Панель администратора")(message_handler.admin_menu)
         self.bot.on.message(text="Список всей аренды")(message_handler.admin_get_all_rentals)
         self.bot.on.message(text="Отменить аренду человеку")(message_handler.admin_cancel_rental)
-        self.bot.on.message(text="Добавить тех. специалиста")(message_handler.admin_add_tech_support)
-        # self.bot.on.message(text="Удалить тех. специалиста")(message_handler) # TODO: подумать на реализацией
+        self.bot.on.message(text="Список тех. специалистов")(message_handler.admin_get_all_support)
+        self.bot.on.message(text="Добавить тех. специалиста")(message_handler.admin_add_id_tech_sup)
+        self.bot.on.message(text="Удалить тех. специалиста")(message_handler.admin_delete_id_tech_sup)
 
         self.bot.on.message(text="Информация")(message_handler.information)
         self.bot.on.message(text="Как добраться?")(message_handler.choice_polygon)

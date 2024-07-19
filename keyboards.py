@@ -50,6 +50,8 @@ admin_menu_keyboard = (
     .row()
     .add(Text("Отменить аренду человеку"), color=KeyboardButtonColor.PRIMARY)
     .row()
+    .add(Text("Список тех. специалистов"), color=KeyboardButtonColor.PRIMARY)
+    .row()
     .add(Text("Добавить тех. специалиста"), color=KeyboardButtonColor.PRIMARY)
     .row()
     .add(Text("Удалить тех. специалиста"), color=KeyboardButtonColor.PRIMARY)
