@@ -1,19 +1,9 @@
 from vkbottle import Keyboard, Text, KeyboardButtonColor, OpenLink
 
-from config import question_answer
-
 back_keyboard = (
     Keyboard(one_time=True, inline=False)
     .add(Text("Назад"), color=KeyboardButtonColor.NEGATIVE)
 )
-
-question_frequent = (
-    Keyboard(one_time=True, inline=False)
-)
-for el in question_answer:
-    question_frequent.add(Text(el), color=KeyboardButtonColor.PRIMARY)
-    question_frequent.row()
-question_frequent.add(Text("Назад"), color=KeyboardButtonColor.NEGATIVE)
 
 tech_support_keyboard = (
     Keyboard(one_time=False, inline=False)

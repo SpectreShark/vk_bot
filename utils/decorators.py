@@ -28,13 +28,13 @@ def requires_menu(menu: str | list):
 
     return decorator
 
-def requires_admin_menu(menu: str):
+def requires_row_menu(menu: str):
     def decorators(func):
         @wraps(func)
-        async def wrapped(self, message: Message):
+        async def wrapped(self, message: Message, *args, **kwargs):
             user_id = message.from_id
             if await self.is_correct_admin_menu(user_id, menu):
-                return await func(self, message)
+                return await func(self, message, *args, **kwargs)
             else:
                 return await self.on_unknown_command(message)
 

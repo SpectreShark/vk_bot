@@ -18,7 +18,6 @@ class SchedulerModule(Module):
 
     async def on_load(self) -> None:
         state = await self.dependencies[RedisModule].get_menu(0)
-        # TODO: state в начале всегда == No, поскольку был сделан первый запуск
         # TODO: await self.dependencies[RedisModule].set_menu(0, "No")
         if (datetime.now().weekday() == 0) and (state == "No"):
             await self.update_database_constants()
