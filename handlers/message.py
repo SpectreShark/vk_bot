@@ -459,7 +459,7 @@ class MessageHandler:
         match menu:
             case "info" | "lease_menu" | "help_menu" | "tech_support" | "admin_menu" | "get_id":
                 await self.on_start_command(message)
-            case "admin_all_rentals" | "admin_cancel_rental_null" | "admin_add_id_tech_sup" | "admin_get_all_support":
+            case "admin_all_rentals" | "admin_cancel_rental_null" | "admin_add_id_tech_sup" | "admin_get_all_support" | "admin_add_tech_support":
                 await self.admin_menu.__wrapped__(self, message)
             case "admin_choice_cancel_rental_null" | "admin_delete_rental":
                 await self.admin_cancel_rental.__wrapped__(self, message)
@@ -467,8 +467,6 @@ class MessageHandler:
                 await self.information.__wrapped__(self, message)
             case "cancel_my_lease" | "my_lease" | "remaining_lease" | "price_lease" | "select_lease" | "add_lease":
                 await self.lease.__wrapped__(self, message)
-            case "admin_add_tech_support":
-                await self.admin_add_id_tech_sup.__wrapped__(self, message)
             case "admin_delete_tech_support":
                 await self.admin_delete_id_tech_sup.__wrapped__(self, message)
             case "answer_question_frequent":
