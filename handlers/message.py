@@ -56,7 +56,7 @@ class MessageHandler:
                 await self.admin_delete_rental(message)
                 return
 
-        if row_state == "question_frequent":
+        if (row_state == "question_frequent") and (message.text not in ["Влево", "Вправо"]):
             if message.text in question_answer:
                 await message.answer(question_answer.get(message.text), keyboard=keyboards.back_keyboard)
                 await self.redis.set_menu(message.from_id, "answer_question_frequent")
