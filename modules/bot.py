@@ -94,7 +94,7 @@ class VkBotModule(Module):
             for user_id in all_user_ids:
                 user_info = await self.bot.api.users.get(user_ids=user_id, fields=['first_name', 'last_name'])
                 name = f"{user_info[0].first_name} {user_info[0].last_name}"
-                if name == "DELETED":
+                if name == "DELETED ":
                     deleted_user_ids.append(user_id)
 
         return deleted_user_ids
