@@ -66,7 +66,6 @@ class VkBotModule(Module):
         async with self.dependencies[DatabaseModule].session() as session:
             for tech_id in user_id_support:
                 (await session.execute(delete(Support).filter(Support.user_id == tech_id)))
-                await session.commit()
             for user in user_id_item:
                 user_id, item_name = user[0], user[1]
                 result = await session.execute(select(Item).filter(Item.name == item_name))
@@ -84,7 +83,7 @@ class VkBotModule(Module):
                         )
                     )
 
-                    await session.commit()
+            await session.commit()
 
     async def get_deleted_user_ids_from_support(self) -> list:
         deleted_user_ids = []

@@ -1,3 +1,5 @@
+from random import randint
+
 import keyboards
 
 from collections import defaultdict
@@ -5,7 +7,7 @@ from collections import defaultdict
 from vkbottle.bot import Message
 from vkbottle import Bot, Keyboard, KeyboardButtonColor, Text
 
-from config import question_answer
+from config import question_answer, set_of_kit
 from models import Item, Support
 
 from sqlalchemy import select, insert, update, func, delete
@@ -244,6 +246,16 @@ class MessageHandler:
                 if user_id in item.renters_users_id:
                     updated_renters_users_id = item.renters_users_id.copy()
                     updated_renters_users_id.remove(user_id)
+                    if message.text == "Комплект":
+                        for el in set_of_kit:
+                            await session.execute(
+                                update(Item)
+                                .filter(Item.name == el)
+                                .values(
+                                    quantity_on_sunday=item.quantity_on_sunday + 1
+                                )
+                            )
+
 
                     await session.execute(
                         update(Item)
@@ -256,7 +268,8 @@ class MessageHandler:
 
                     await session.commit()
                     await message.answer(f"Вы успешно отменили бронирование {message.text}",
-                                         keyboard=keyboards.back_keyboard)
+                                             keyboard=keyboards.back_keyboard)
+                    await self.bot.api.messages.send(user_id=user_id, message=f"Аренда типа '{message.text}' была отменена администратором. Для больших подробностей обратитесь к администрации через Тех. поддержку", random_id=randint(1, 1000000))
                     await self.redis.set_menu(message.from_id, "admin_delete_rental")
         else:
             await message.answer("У человека не забронирована данная вещь")
@@ -306,6 +319,16 @@ class MessageHandler:
                 item = result.scalars().first()
                 updated_renters_users_id = (item.renters_users_id or []).copy()
                 updated_renters_users_id.append(user_id)
+                if message.text == "Комплект":
+                    for el in set_of_kit:
+                        await session.execute(
+                            update(Item)
+                            .filter(Item.name == el)
+                            .values(
+                                quantity_on_sunday=item.quantity_on_sunday - 1
+                            )
+                        )
+
 
                 await session.execute(
                     update(Item)
@@ -374,6 +397,15 @@ class MessageHandler:
                 if user_id in item.renters_users_id:
                     updated_renters_users_id = item.renters_users_id.copy()
                     updated_renters_users_id.remove(user_id)
+                    if message.text == "Комплект":
+                        for el in set_of_kit:
+                            await session.execute(
+                                update(Item)
+                                .filter(Item.name == el)
+                                .values(
+                                    quantity_on_sunday=item.quantity_on_sunday + 1
+                                )
+                            )
 
                     await session.execute(
                         update(Item)
