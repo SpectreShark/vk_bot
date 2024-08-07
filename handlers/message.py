@@ -119,7 +119,7 @@ class MessageHandler:
     @requires_menu("admin_menu")
     async def admin_get_all_rentals(self, message: Message) -> None:
         result = await self.get_all_rental_lease()
-        text = f"Список всех людей: {result}"
+        text = f"Список всех людей: {result*4000}"
         if result == "":
             text = "Нет людей, которые забронировали аренду"
         await message.answer(text, keyboard=keyboards.back_keyboard)
