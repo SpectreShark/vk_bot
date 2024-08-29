@@ -19,8 +19,12 @@ async def sent_request_to_support(connection: async_sessionmaker[AsyncSession], 
             color=KeyboardButtonColor.POSITIVE)
     ).get_json()
     for el in await get_specialist_ids(connection):
-        await bot.api.messages.send(user_id=el, message=f"Пользователю '{full_name}' требуется специалист.",
-            keyboard=keyboard, random_id=randint(1, 1000000))
+        try:
+            await bot.api.messages.send(user_id=el, message=f"Пользователю '{full_name}' требуется специалист.",
+                keyboard=keyboard, random_id=randint(1, 1000000))
+        except Exception as err:
+            print(err)
+            continue
 
 
 
