@@ -294,8 +294,9 @@ class MessageHandler:
     async def select_lease(self, message: Message) -> None:
         text = "Выберите аренду"
         select_lease_keyboard = (Keyboard(one_time=True, inline=False))
+        lease_menu = await get_select_lease_menu()
         lease_list = await self.get_lease()
-        for ind, el in enumerate(lease_list):
+        for ind, el in enumerate(lease_menu):
             if (ind + 1) % 2 == 0:
                 select_lease_keyboard.row()
             select_lease_keyboard.add(Text(el), color=KeyboardButtonColor.PRIMARY)
@@ -517,6 +518,13 @@ class MessageHandler:
                     await self.admin_cancel_rental.__wrapped__(self, message)
                 else:
                     await self.on_unknown_command(message)
+# TODO: получение списка для выбора аренды ( выбирает все поля, даже == 0 )
+    async def get_select_lease_menu(self) -> list:
+        async with self.database.session() as session:
+            result = (
+                await session.execute(select(Item).order_by(Item.name))).fetchall()
+            name = [el.name for item in result for el in item]
+            return name
 # TODO: получение списка для добавления/удаления аренды ( выбирает все поля в БД, где кол-во > 0 )
     async def get_lease(self) -> list:
         async with self.database.session() as session:
