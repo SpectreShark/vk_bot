@@ -294,7 +294,7 @@ class MessageHandler:
     async def select_lease(self, message: Message) -> None:
         text = "Выберите аренду"
         select_lease_keyboard = (Keyboard(one_time=True, inline=False))
-        lease_menu = await get_select_lease_menu()
+        lease_menu = await self.get_select_lease_menu()
         lease_list = await self.get_lease()
         for ind, el in enumerate(lease_menu):
             if (ind + 1) % 2 == 0:
